@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="[http://www.thymeleaf.org](http://www.thymeleaf.org)" xmlns:sec="[http://www.thymeleaf.org/extras/spring-security](http://www.thymeleaf.org/extras/spring-security)">
 <head>
     <meta charset="UTF-8">
     <title>Gestiune Facultate</title>
@@ -14,14 +14,52 @@
 </head>
 <body>
     
-    <div class="navbar">
-        <a href="/">Acasă</a>
-        <a href="/materii">Materii</a>
+<div class="navbar">
+    <a href="/">Acasă</a>
+    
+    <!-- ELEMENTE PENTRU UTILIZATORII LOGAȚI -->
+    <th:block sec:authorize="isAuthenticated()">
+        <!-- Admin/Profesor -->
+        <th:block sec:authorize="hasAnyRole('ADMIN', 'PROFESOR')">
+            <a href="/materii">Materii</a>
+        </th:block>
+
+        <!-- Doar Admin -->
+        <th:block sec:authorize="hasRole('ADMIN')">
+            <a href="/grupe">Grupe</a>
+            <a href="/studenti">Studenți</a>
+            <a href="/profesori">Profesori</a>
+        </th:block>
+        
+        <!-- Toți cei logați văd Notele -->
+        <a href="/note">Note / Carnet</a>
+        
+        <!-- Buton de Logout -->
+        <a href="/logout" style="color: #ff7675;">Logout ([[${#authentication.name}]])</a>
+    </th:block>
+
+    <!-- ELEMENTE PENTRU VIZITATORI (NEAUTENTIFICAȚI) -->
+    <th:block sec:authorize="isAnonymous()">
+        <!-- Acum butonul de Note DISPARE și apare cel de LOGIN -->
+        <a href="/login" style="background-color: #27ae60; border-radius: 5px;">Autentificare (Login)</a>
+    </th:block>
+</div>
+
+    <div class="container" style="text-align: center; margin-top: 50px;">
+    <h1>Bun venit la Platforma de Gestiune Facultate</h1>
+    
+    <div sec:authorize="isAnonymous()">
+        <p>Pentru a accesa notele, materiile sau situația școlară, vă rugăm să vă autentificați.</p>
+        <br>
+        <a href="/login" style="padding: 15px 30px; background-color: #2980b9; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 18px;">
+            Intră în Cont
+        </a>
     </div>
 
-    <div class="container">
-        <h1 th:text="${mesajBunVenit}">Titlu default</h1>
-        <p>Aceasta este pagina publică a facultății.</p>
+    <div sec:authorize="isAuthenticated()">
+        <h3>Sunteți conectat ca: <span th:text="${#authentication.name}"></span></h3>
+        <p>Folosiți meniul de mai sus pentru a naviga în secțiunile disponibile rolului dumneavoastră.</p>
     </div>
+</div>
 </body>
 </html>

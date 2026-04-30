@@ -46,4 +46,6 @@ public class Student {
     public void setCnp(String cnp) { this.cnp = cnp; }
     public String getMatricol() { return matricol; }
     public void setMatricol(String matricol) { this.matricol = matricol; }
+    public Grupa getGrupa() { return grupa; }
+    public void setGrupa(Grupa grupa) { this.grupa = grupa; }
 }

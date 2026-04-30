@@ -14,4 +14,9 @@ public class WebController {
         model.addAttribute("mesajBunVenit", "Bun venit la platforma de gestiune a facultății!");
         return "index"; // Caută un fișier numit index.html
     }
+
+    @GetMapping("/login")
+    public String afiseazaLogin() {
+        return "login";
+    }
 }

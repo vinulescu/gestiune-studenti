@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="[http://www.thymeleaf.org](http://www.thymeleaf.org)" xmlns:sec="[http://www.thymeleaf.org/extras/spring-security](http://www.thymeleaf.org/extras/spring-security)">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestiune Note</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; }
+        .navbar { background-color: #2c3e50; padding: 15px; text-align: center; }
+        .navbar a { color: white; text-decoration: none; padding: 10px 20px; font-weight: bold; }
+        .navbar a:hover { background-color: #34495e; border-radius: 5px; }
+        .container { width: 90%; margin: 20px auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #2c3e50; color: white; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="number"], input[type="date"], select { padding: 8px; width: 100%; box-sizing: border-box; }
+        button { background-color: #27ae60; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; width: 100%; }
+        button:hover { background-color: #2ecc71; }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <a href="/">Acasă</a>
+    
+    <!-- ELEMENTE PENTRU UTILIZATORII LOGAȚI -->
+    <th:block sec:authorize="isAuthenticated()">
+        <!-- Admin/Profesor -->
+        <th:block sec:authorize="hasAnyRole('ADMIN', 'PROFESOR')">
+            <a href="/materii">Materii</a>
+        </th:block>
+
+        <!-- Doar Admin -->
+        <th:block sec:authorize="hasRole('ADMIN')">
+            <a href="/grupe">Grupe</a>
+            <a href="/studenti">Studenți</a>
+            <a href="/profesori">Profesori</a>
+        </th:block>
+        
+        <!-- Toți cei logați văd Notele -->
+        <a href="/note">Note / Carnet</a>
+        
+        <!-- Buton de Logout -->
+        <a href="/logout" style="color: #ff7675;">Logout ([[${#authentication.name}]])</a>
+    </th:block>
+
+    <!-- ELEMENTE PENTRU VIZITATORI (NEAUTENTIFICAȚI) -->
+    <th:block sec:authorize="isAnonymous()">
+        <!-- Acum butonul de Note DISPARE și apare cel de LOGIN -->
+        <a href="/login" style="background-color: #27ae60; border-radius: 5px;">Autentificare (Login)</a>
+    </th:block>
+</div>
+
+   <div th:if="${#authorization.expression('hasAnyRole(''ADMIN'', ''PROFESOR'')')}">
+    <h2>Acordă o Notă</h2>
+        
+        <form th:action="@{/note/salveaza}" method="post">
+            <div class="form-grid">
+                <!-- Selectare Student -->
+                <div class="form-group">
+                    <label>Student:</label>
+                    <select name="idStudent" required>
+                        <option value="">-- Alege Studentul --</option>
+                        <option th:each="s : ${studenti}" th:value="${s.idStudent}" th:text="${s.nume + ' ' + s.prenume + ' (' + s.matricol + ')'}"></option>
+                    </select>
+                </div>
+
+                <!-- Selectare Materie -->
+                <div class="form-group">
+                    <label>Materie:</label>
+                    <select name="idMaterie" required>
+                        <option value="">-- Alege Materia --</option>
+                        <option th:each="m : ${materii}" th:value="${m.idMaterie}" th:text="${m.denumire + ' (' + m.credite + ' credite)'}"></option>
+                    </select>
+                </div>
+
+                <!-- Selectare Profesor -->
+                <div class="form-group">
+                    <label>Profesor Evaluator:</label>
+                    <select name="idProfesor" required>
+                        <option value="">-- Alege Profesorul --</option>
+                        <option th:each="p : ${profesori}" th:value="${p.idProfesor}" th:text="${p.titluAcademic + ' ' + p.nume + ' ' + p.prenume}"></option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <!-- REQ-36: Validare HTML min 1 max 10 -->
+                    <label>Valoare Notă (1-10):</label>
+                    <input type="number" name="valoare" min="1" max="10" required />
+                </div>
+
+                <div class="form-group">
+                    <label>Data Acordării:</label>
+                    <input type="date" name="dataAcordarii" required />
+                </div>
+            </div>
+            <button type="submit">Salvează Nota</button>
+        </form>
+        </div>
+
+        <hr>
+
+        <h2>Carnet Electronic (Istoric Note)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Materie</th>
+                    <th>Notă</th>
+                    <th>Profesor</th>
+                    <th>Data</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="n : ${note}">
+                    <td th:text="${n.student.nume + ' ' + n.student.prenume}"></td>
+                    <td th:text="${n.materie.denumire}"></td>
+                    <td th:text="${n.valoare}" style="font-weight: bold; color: #2980b9;"></td>
+                    <td th:text="${n.profesor.nume + ' ' + n.profesor.prenume}"></td>
+                    <td th:text="${n.dataAcordarii}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>
