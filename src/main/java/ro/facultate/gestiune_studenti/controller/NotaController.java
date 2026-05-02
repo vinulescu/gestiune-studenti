@@ -36,12 +36,27 @@ public String afiseazaNote(Model model, Authentication authentication) {
     // Verificăm ce rol are cel logat
     String rol = authentication.getAuthorities().toString();
 
-    if (rol.contains("ROLE_Student")) { // Atenție la majuscule, depinde cum e în Enum (Student)
-        // REQ-35: Studentul își vede doar notele lui
+    if (rol.contains("ROLE_Student") || rol.contains("ROLE_STUDENT")) {
+        // Găsim notele studentului
         var noteFiltrate = notaRepository.findAll().stream()
             .filter(n -> n.getStudent().getUtilizator().getNumeUtilizator().equals(username))
             .collect(Collectors.toList());
+            
         model.addAttribute("note", noteFiltrate);
+
+        // --- NOU: CALCULUL MEDIEI ---
+        if (!noteFiltrate.isEmpty()) {
+            double suma = 0;
+            for (ro.facultate.gestiune_studenti.model.Nota nota : noteFiltrate) {
+                suma += nota.getValoare(); // Adunăm toate notele
+            }
+            double media = suma / noteFiltrate.size(); // Împărțim la numărul lor
+            
+            // Trimitem media către HTML, formatată cu 2 zecimale (ex: 8.50)
+            model.addAttribute("mediaGenerala", String.format("%.2f", media));
+        } else {
+            model.addAttribute("mediaGenerala", "Fără note momentan");
+        }
     } else {
         // Profesorii și Adminii văd tot
         model.addAttribute("note", notaRepository.findAll());
@@ -96,5 +111,57 @@ public String afiseazaNote(Model model, Authentication authentication) {
         notaRepository.save(nota);
 
         return "redirect:/note";
+    }
+
+    // Importă @PathVariable și @PostMapping dacă nu le ai deja sus
+    @PostMapping("/note/sterge/{id}")
+    public String stergeNota(@org.springframework.web.bind.annotation.PathVariable("id") Long idNota) {
+        // Ștergem nota din baza de date folosind ID-ul ei
+        notaRepository.deleteById(idNota);
+        
+        // După ștergere, reîncărcăm pagina de note
+        return "redirect:/note";
+    }
+    // 1. Afișează pagina de editare cu datele notei selectate
+    @GetMapping("/note/editeaza/{id}")
+    public String arataFormularEditare(@org.springframework.web.bind.annotation.PathVariable("id") Long idNota, Model model) {
+        // Găsim nota în baza de date
+        ro.facultate.gestiune_studenti.model.Nota nota = notaRepository.findById(idNota)
+                .orElseThrow(() -> new IllegalArgumentException("ID notă invalid: " + idNota));
+        
+        // Trimitem nota și listele către HTML
+        model.addAttribute("nota", nota);
+        model.addAttribute("studenti", studentRepository.findAll());
+        model.addAttribute("profesori", profesorRepository.findAll());
+        model.addAttribute("materii", materieRepository.findAll());
+        
+        return "edit-nota"; // Ne va trimite către noul fișier HTML
+    }
+
+    // 2. Salvează modificările făcute de utilizator
+    @PostMapping("/note/actualizeaza/{id}")
+    public String actualizeazaNota(
+            @org.springframework.web.bind.annotation.PathVariable("id") Long idNota,
+            @org.springframework.web.bind.annotation.RequestParam Long idStudent,
+            @org.springframework.web.bind.annotation.RequestParam Long idMaterie,
+            @org.springframework.web.bind.annotation.RequestParam Long idProfesor,
+            @org.springframework.web.bind.annotation.RequestParam int valoare,
+            @org.springframework.web.bind.annotation.RequestParam String dataAcordarii) {
+
+        // Căutăm nota veche
+        ro.facultate.gestiune_studenti.model.Nota nota = notaRepository.findById(idNota)
+                .orElseThrow(() -> new IllegalArgumentException("ID notă invalid: " + idNota));
+
+        // Actualizăm cu noile valori
+        nota.setStudent(studentRepository.findById(idStudent).orElse(null));
+        nota.setMaterie(materieRepository.findById(idMaterie).orElse(null));
+        nota.setProfesor(profesorRepository.findById(idProfesor).orElse(null));
+        nota.setValoare(valoare);
+        nota.setDataAcordarii(java.time.LocalDate.parse(dataAcordarii));
+
+        // Salvăm în baza de date
+        notaRepository.save(nota);
+
+        return "redirect:/note"; // Ne întoarcem la carnetul de note
     }
 }

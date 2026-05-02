@@ -1,21 +1,22 @@
 <!DOCTYPE html>
-<html xmlns:th="[http://www.thymeleaf.org](http://www.thymeleaf.org)" xmlns:sec="[http://www.thymeleaf.org/extras/spring-security](http://www.thymeleaf.org/extras/spring-security)">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Gestiune Grupe</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; }
         .navbar { background-color: #2c3e50; padding: 15px; text-align: center; }
-        .navbar a { color: white; text-decoration: none; padding: 10px 20px; font-weight: bold; }
+        .navbar a { color: white; text-decoration: none; padding: 10px 20px; font-weight: bold; display: inline-block;}
         .navbar a:hover { background-color: #34495e; border-radius: 5px; }
-        .container { width: 80%; margin: 20px auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); }
+        .container { width: 80%; margin: 20px auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); max-width: 1000px;}
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
         th { background-color: #2c3e50; color: white; }
         .form-group { margin-bottom: 15px; }
-        input[type="text"], input[type="number"] { padding: 8px; width: 100%; box-sizing: border-box; }
+        input[type="text"], input[type="number"] { padding: 8px; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px;}
         button { background-color: #27ae60; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; }
         button:hover { background-color: #2ecc71; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -52,24 +53,26 @@
 </div>
 
     <div class="container">
-        <h2>Adaugă Grupa Nouă</h2>
-        <form th:action="@{/grupe/salveaza}" th:object="${grupaNoua}" method="post">
-            <div class="form-group">
-                <label>Nume Grupa (ex: CR-3.1A):</label>
-                <input type="text" th:field="*{numeGrupa}" required />
-            </div>
-            <div class="form-group">
-                <label>An Studiu (ex: 3):</label>
-                <input type="number" th:field="*{anStudiu}" required />
-            </div>
-            <div class="form-group">
-                <label>Forma Învățământ (ex: Zi, ID, Sereno):</label>
-                <input type="text" th:field="*{formaInvatamant}" required />
-            </div>
-            <button type="submit">Salvează Grupa</button>
-        </form>
-
-        <hr>
+        <!-- DOAR ADMINUL POATE ADĂUGA GRUPE -->
+        <div sec:authorize="hasRole('ADMIN')">
+            <h2>Adaugă Grupa Nouă</h2>
+            <form th:action="@{/grupe/salveaza}" th:object="${grupaNoua}" method="post">
+                <div class="form-group">
+                    <label>Nume Grupa (ex: CR-3.1A):</label>
+                    <input type="text" th:field="*{numeGrupa}" required />
+                </div>
+                <div class="form-group">
+                    <label>An Studiu (ex: 3):</label>
+                    <input type="number" th:field="*{anStudiu}" required />
+                </div>
+                <div class="form-group">
+                    <label>Forma Învățământ (ex: Zi, ID, Sereno):</label>
+                    <input type="text" th:field="*{formaInvatamant}" required />
+                </div>
+                <button type="submit">Salvează Grupa</button>
+            </form>
+            <hr style="margin: 30px 0; border: 1px solid #ecf0f1;">
+        </div>
 
         <h2>Lista Grupe Disponibile</h2>
         <table>
@@ -79,14 +82,29 @@
                     <th>Nume Grupa</th>
                     <th>An Studiu</th>
                     <th>Forma Învățământ</th>
+                    <!-- AICI AM ADĂUGAT CAPUL DE COLOANĂ -->
+                    <th sec:authorize="hasRole('ADMIN')">Acțiuni</th>
                 </tr>
             </thead>
             <tbody>
                 <tr th:each="g : ${grupe}">
                     <td th:text="${g.idGrupa}"></td>
-                    <td th:text="${g.numeGrupa}"></td>
+                    <td th:text="${g.numeGrupa}" style="font-weight: bold;"></td>
                     <td th:text="${g.anStudiu}"></td>
                     <td th:text="${g.formaInvatamant}"></td>
+                    
+                    <!-- AICI AM ADĂUGAT BUTOANELE PENTRU FIECARE RÂND -->
+                    <td sec:authorize="hasRole('ADMIN')" style="display: flex; gap: 10px; border: none; align-items: center;">
+                        <a th:href="@{/grupe/editeaza/{id}(id=${g.idGrupa})}" 
+                           style="background-color: #f39c12; color: white; padding: 6px 12px; text-decoration: none; border-radius: 5px; font-size: 14px;">
+                           Editează
+                        </a>
+                        <form th:action="@{/grupe/sterge/{id}(id=${g.idGrupa})}" method="post" style="margin: 0;">
+                            <button type="submit" style="background-color: #e74c3c; padding: 6px 12px; font-size: 14px; margin: 0; width: auto;" onclick="return confirm('Sigur ștergi această grupă?');">
+                                Șterge
+                            </button>
+                        </form>
+                    </td>
                 </tr>
             </tbody>
         </table>

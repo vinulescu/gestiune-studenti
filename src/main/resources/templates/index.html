@@ -1,65 +1,86 @@
 <!DOCTYPE html>
-<html xmlns:th="[http://www.thymeleaf.org](http://www.thymeleaf.org)" xmlns:sec="[http://www.thymeleaf.org/extras/spring-security](http://www.thymeleaf.org/extras/spring-security)">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Gestiune Facultate</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; margin: 0; background-color: #f4f4f9; }
         .navbar { background-color: #2c3e50; padding: 15px; text-align: center; }
-        .navbar a { color: white; text-decoration: none; padding: 10px 20px; font-weight: bold; }
+        .navbar a { color: white; text-decoration: none; padding: 10px 20px; font-weight: bold; display: inline-block;}
         .navbar a:hover { background-color: #34495e; border-radius: 5px; }
         h1 { color: #2c3e50; }
-        .container { background: white; padding: 20px; border-radius: 10px; display: inline-block; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); margin-top: 50px; }
+        .container { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); margin-top: 50px; width: 80%; max-width: 1000px; }
     </style>
 </head>
 <body>
     
+<!-- BARA DE NAVIGARE -->
 <div class="navbar">
     <a href="/">Acasă</a>
     
-    <!-- ELEMENTE PENTRU UTILIZATORII LOGAȚI -->
     <th:block sec:authorize="isAuthenticated()">
-        <!-- Admin/Profesor -->
         <th:block sec:authorize="hasAnyRole('ADMIN', 'PROFESOR')">
             <a href="/materii">Materii</a>
         </th:block>
 
-        <!-- Doar Admin -->
         <th:block sec:authorize="hasRole('ADMIN')">
             <a href="/grupe">Grupe</a>
             <a href="/studenti">Studenți</a>
             <a href="/profesori">Profesori</a>
         </th:block>
         
-        <!-- Toți cei logați văd Notele -->
         <a href="/note">Note / Carnet</a>
-        
-        <!-- Buton de Logout -->
         <a href="/logout" style="color: #ff7675;">Logout ([[${#authentication.name}]])</a>
     </th:block>
 
-    <!-- ELEMENTE PENTRU VIZITATORI (NEAUTENTIFICAȚI) -->
     <th:block sec:authorize="isAnonymous()">
-        <!-- Acum butonul de Note DISPARE și apare cel de LOGIN -->
         <a href="/login" style="background-color: #27ae60; border-radius: 5px;">Autentificare (Login)</a>
     </th:block>
 </div>
 
-    <div class="container" style="text-align: center; margin-top: 50px;">
+<!-- CONTINUTUL PRINCIPAL -->
+<div class="container">
     <h1>Bun venit la Platforma de Gestiune Facultate</h1>
     
+    <!-- Mesaj vizitatori -->
     <div sec:authorize="isAnonymous()">
         <p>Pentru a accesa notele, materiile sau situația școlară, vă rugăm să vă autentificați.</p>
         <br>
-        <a href="/login" style="padding: 15px 30px; background-color: #2980b9; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 18px;">
+        <a href="/login" style="padding: 15px 30px; background-color: #2980b9; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 18px; display: inline-block;">
             Intră în Cont
         </a>
     </div>
 
+    <!-- Mesaj utilizatori logați -->
     <div sec:authorize="isAuthenticated()">
-        <h3>Sunteți conectat ca: <span th:text="${#authentication.name}"></span></h3>
+        <h3>Sunteți conectat ca: <span th:text="${#authentication.name}" style="color: #2980b9;"></span></h3>
         <p>Folosiți meniul de mai sus pentru a naviga în secțiunile disponibile rolului dumneavoastră.</p>
     </div>
+
+    <!-- DASHBOARD STATISTIC DOAR PENTRU ADMIN -->
+    <div sec:authorize="hasRole('ADMIN')" style="margin-top: 40px; border-top: 2px solid #ecf0f1; padding-top: 30px;">
+        <h2 style="color: #2c3e50; margin-bottom: 20px;">Panou de Control Statistic</h2>
+        
+        <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+            <div style="background-color: #3498db; color: white; padding: 20px; border-radius: 10px; width: 200px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                <h3 style="margin: 0; font-size: 1.2rem;">Total Studenți</h3>
+                <p style="font-size: 2.5rem; font-weight: bold; margin: 10px 0 0 0;" th:text="${nrStudenti}">0</p>
+            </div>
+            <div style="background-color: #2ecc71; color: white; padding: 20px; border-radius: 10px; width: 200px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                <h3 style="margin: 0; font-size: 1.2rem;">Total Profesori</h3>
+                <p style="font-size: 2.5rem; font-weight: bold; margin: 10px 0 0 0;" th:text="${nrProfesori}">0</p>
+            </div>
+            <div style="background-color: #f39c12; color: white; padding: 20px; border-radius: 10px; width: 200px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                <h3 style="margin: 0; font-size: 1.2rem;">Grupe Active</h3>
+                <p style="font-size: 2.5rem; font-weight: bold; margin: 10px 0 0 0;" th:text="${nrGrupe}">0</p>
+            </div>
+            <div style="background-color: #9b59b6; color: white; padding: 20px; border-radius: 10px; width: 200px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                <h3 style="margin: 0; font-size: 1.2rem;">Materii Predate</h3>
+                <p style="font-size: 2.5rem; font-weight: bold; margin: 10px 0 0 0;" th:text="${nrMaterii}">0</p>
+            </div>
+        </div>
+    </div>
+
 </div>
 </body>
 </html>

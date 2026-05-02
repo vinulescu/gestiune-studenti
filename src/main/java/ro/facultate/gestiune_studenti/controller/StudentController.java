@@ -60,4 +60,57 @@ public class StudentController {
 
         return "redirect:/studenti";
     }
+
+    // ==========================================
+    // METODE NOI PENTRU EDITARE ȘI ȘTERGERE
+    // ==========================================
+
+    // 1. Șterge un student
+    @PostMapping("/studenti/sterge/{id}")
+    public String stergeStudent(@PathVariable("id") Long idStudent) {
+        studentRepository.deleteById(idStudent);
+        return "redirect:/studenti";
+    }
+
+    // 2. Afișează pagina de editare cu datele studentului
+    @GetMapping("/studenti/editeaza/{id}")
+    public String arataFormularEditareStudent(@PathVariable("id") Long idStudent, Model model) {
+        Student student = studentRepository.findById(idStudent)
+            .orElseThrow(() -> new IllegalArgumentException("ID student invalid: " + idStudent));
+        
+        model.addAttribute("student", student);
+        model.addAttribute("grupe", grupaRepository.findAll()); // Trimitem grupele pentru meniul derulant
+        
+        return "edit-student"; // Trimite către edit-student.html
+    }
+
+    // 3. Salvează modificările făcute de utilizator
+    @PostMapping("/studenti/actualizeaza/{id}")
+    public String actualizeazaStudent(
+            @PathVariable("id") Long idStudent,
+            @RequestParam String nume,
+            @RequestParam String prenume,
+            @RequestParam String cnp,
+            @RequestParam String matricol,
+            @RequestParam Long idGrupa) {
+        
+        // Găsim studentul existent
+        Student student = studentRepository.findById(idStudent)
+            .orElseThrow(() -> new IllegalArgumentException("ID student invalid: " + idStudent));
+        
+        // Actualizăm datele personale
+        student.setNume(nume);
+        student.setPrenume(prenume);
+        student.setCnp(cnp);
+        student.setMatricol(matricol);
+        
+        // Actualizăm grupa
+        Grupa grupa = grupaRepository.findById(idGrupa).orElse(null);
+        student.setGrupa(grupa);
+        
+        // Salvăm modificările (fără să alterăm contul de utilizator/parola)
+        studentRepository.save(student);
+        
+        return "redirect:/studenti"; // Ne întoarcem la lista de studenți
+    }
 }

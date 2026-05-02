@@ -10,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable; // Import adăugat pentru {id}
 
 @Controller
 public class ProfesorController {
@@ -53,5 +54,49 @@ public class ProfesorController {
         profesorRepository.save(profesor);
 
         return "redirect:/profesori";
+    }
+
+    // ==========================================
+    // METODE NOI PENTRU EDITARE ȘI ȘTERGERE
+    // ==========================================
+
+    // 1. Șterge un profesor
+    @PostMapping("/profesori/sterge/{id}")
+    public String stergeProfesor(@PathVariable("id") Long idProfesor) {
+        profesorRepository.deleteById(idProfesor);
+        return "redirect:/profesori";
+    }
+
+    // 2. Afișează pagina de editare cu datele profesorului selectat
+    @GetMapping("/profesori/editeaza/{id}")
+    public String arataFormularEditareProfesor(@PathVariable("id") Long idProfesor, Model model) {
+        Profesor profesor = profesorRepository.findById(idProfesor)
+            .orElseThrow(() -> new IllegalArgumentException("ID profesor invalid: " + idProfesor));
+        
+        model.addAttribute("profesor", profesor);
+        return "edit-profesor"; // Trimite către edit-profesor.html
+    }
+
+    // 3. Salvează modificările făcute de utilizator
+    @PostMapping("/profesori/actualizeaza/{id}")
+    public String actualizeazaProfesor(
+            @PathVariable("id") Long idProfesor,
+            @RequestParam String nume,
+            @RequestParam String prenume,
+            @RequestParam String titluAcademic) {
+        
+        // Găsim profesorul existent
+        Profesor profesor = profesorRepository.findById(idProfesor)
+            .orElseThrow(() -> new IllegalArgumentException("ID profesor invalid: " + idProfesor));
+        
+        // Actualizăm doar datele personale (nu și contul/parola)
+        profesor.setNume(nume);
+        profesor.setPrenume(prenume);
+        profesor.setTitluAcademic(titluAcademic);
+        
+        // Salvăm modificările
+        profesorRepository.save(profesor);
+        
+        return "redirect:/profesori"; // Ne întoarcem la lista de profesori
     }
 }
