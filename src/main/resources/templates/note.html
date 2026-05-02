@@ -101,6 +101,16 @@
 
         <hr>
 
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Carnet Electronic (Istoric Note)</h2>
+            <!-- Butonul apare doar pentru studenți -->
+            <a th:if="${#authorization.expression('hasRole(''STUDENT'')')}" 
+               href="/note/export-pdf" 
+               style="background-color: #e74c3c; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+               Descarcă PDF Situație Școlară
+            </a>
+        </div>
+
         <h2>Carnet Electronic (Istoric Note)</h2>
         <table>
             <thead>
